@@ -27,7 +27,7 @@ Las restricciones son Python 3.11 o superior y solo la biblioteca estándar. Los
 
 **Punto de revisión:** la persona responsable contrasta el plan con el alcance y resuelve las decisiones que afecten a arquitectura, dependencias o criterios de aceptación antes de implementar.
 
-**Referencias:** [matemáticas y límites del método](MATEMATICAS.md) e [instrucciones del proyecto](../AGENTS.md).
+**Referencias:** [matemáticas y límites del método en la rama de la demo](https://github.com/contracamilo/codex-tres-cuerpos/blob/codex/solucion-tres-cuerpos/docs/MATEMATICAS.md) e [instrucciones del proyecto](../AGENTS.md).
 
 ## 3. Preparación del entorno
 
