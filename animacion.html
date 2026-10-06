@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tres cuerpos · Codex: tres cuerpos</title>
+<style>
+body{margin:0;background:#080f20;color:#eff3ff;font:18px system-ui}main{max-width:1200px;margin:auto;padding:28px}h1{font-size:clamp(30px,5vw,52px);margin:12px 0}p{color:#b6c5df;max-width:850px;line-height:1.5}.vistas{display:grid;grid-template-columns:1fr 1fr;gap:24px}canvas{width:100%;aspect-ratio:1;background:#101b30;border-radius:12px}button,input{font:inherit}button{padding:10px 20px;border:0;border-radius:6px;background:#bdf7dc;color:#102219;cursor:pointer}input{width:min(500px,80%)}.controles{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:20px 0}h2{font-size:21px}@media(max-width:700px){.vistas{grid-template-columns:1fr}}
+</style>
+<main>
+<p>DEMO DE CODEX · PYTHON Y GRAVEDAD</p>
+<h1>El problema de los tres cuerpos</h1>
+<p>Tres masas iguales se atraen por gravedad. A la derecha cambiamos ligeramente las velocidades iniciales. Ambas vistas usan la misma escala. La simulación aproxima las trayectorias paso a paso.</p>
+<div class="controles"><button id="play">Pausar</button><button id="reset">Reiniciar</button><label>Tiempo <span id="time"></span></label><input id="slider" aria-label="Instante de la simulación" type="range" min="0" value="0" step="1"></div>
+<div class="vistas"><section><h2>Órbita en ocho</h2><canvas id="original" width="640" height="640" aria-label="Animación de la órbita original"></canvas></section><section><h2>Velocidades perturbadas</h2><canvas id="perturbada" width="640" height="640" aria-label="Animación de la órbita perturbada"></canvas></section></div>
+<p>Unidades normalizadas: G = 1, masas = 1. Integración RK4 con paso fijo. La órbita en ocho es un caso especial. Esta comparación no demuestra por sí sola caos.</p>
+<p>Los CSV contienen todas las muestras. La animación muestra hasta 2001 instantes. Consulta diagnostico.json para evaluar el error numérico.</p>
+</main>
+<script>
+const datos=__DATOS__;
+const lienzos=['original','perturbada'].map(id=>document.getElementById(id));
+const slider=document.getElementById('slider'),play=document.getElementById('play');
+const colores=['#62dfb3','#ffbd70','#b8a4ff'];
+let limite=1.3,indice=0,reproduciendo=true,anterior=null;
+for(const conjunto of datos)for(const fila of conjunto)for(let i=0;i<3;i++)limite=Math.max(limite,Math.abs(fila[1+4*i])*1.12,Math.abs(fila[2+4*i])*1.12);
+slider.max=datos[0].length-1;
+function dibujar(){
+ slider.value=indice;document.getElementById('time').textContent=datos[0][indice][0].toFixed(3);
+ lienzos.forEach((canvas,k)=>{
+  const ctx=canvas.getContext('2d'),escala=canvas.width/(2*limite),centro=canvas.width/2;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='#25324a';ctx.beginPath();ctx.moveTo(0,centro);ctx.lineTo(canvas.width,centro);ctx.moveTo(centro,0);ctx.lineTo(centro,canvas.height);ctx.stroke();
+  for(let cuerpo=0;cuerpo<3;cuerpo++){
+   ctx.strokeStyle=colores[cuerpo];ctx.globalAlpha=.65;ctx.lineWidth=2;ctx.beginPath();
+   const comienzo=Math.max(0,indice-500);
+   for(let n=comienzo;n<=indice;n++){
+    const fila=datos[k][n],x=centro+fila[1+4*cuerpo]*escala,y=centro-fila[2+4*cuerpo]*escala;
+    if(n===comienzo)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+   }
+   ctx.stroke();ctx.globalAlpha=1;ctx.fillStyle=colores[cuerpo];
+   const fila=datos[k][indice];ctx.beginPath();ctx.arc(centro+fila[1+4*cuerpo]*escala,centro-fila[2+4*cuerpo]*escala,8,0,Math.PI*2);ctx.fill();
+  }
+ });
+}
+play.onclick=()=>{reproduciendo=!reproduciendo;play.textContent=reproduciendo?'Pausar':'Reproducir';anterior=null;};
+document.getElementById('reset').onclick=()=>{indice=0;anterior=null;dibujar();};
+slider.oninput=()=>{indice=Number(slider.value);reproduciendo=false;play.textContent='Reproducir';dibujar();};
+function animar(ahora){
+ if(reproduciendo){if(anterior===null)anterior=ahora;const pasos=Math.floor((ahora-anterior)/16);if(pasos>0){indice=(indice+pasos)%datos[0].length;anterior+=pasos*16;dibujar();}}
+ requestAnimationFrame(animar);
+}
+dibujar();requestAnimationFrame(animar);
+</script>
+</html>
